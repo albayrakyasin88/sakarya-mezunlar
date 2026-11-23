@@ -1,4 +1,4 @@
-﻿<%@ include file="includes/db.jsp" %>
+<%@ include file="includes/db.jsp" %>
 <%@ include file="includes/header.jsp" %>
 <%
 request.setCharacterEncoding("UTF-8");
