@@ -3,8 +3,8 @@
 <%@ include file="includes/header.jsp" %>
 
 <div style="background:#1b365d; color:#fff; padding:25px; border-radius:6px; margin-bottom:20px;">
-    <h1 style="margin:0 0 10px 0;">Sakarya Üniversitesi Mezunlar ve Yıllık Platformu</h1>
-    <p style="margin:0; font-size:15px;">Sınıf arkadaşlarımızla iletişimde kalmak, fotoğraf ve videolarımızı paylaşmak ve kim nerede ne yapıyor takip etmek için hazırlanmış sosyal paylaşım platformuna hoş geldiniz.</p>
+    <h1 style="margin:0 0 10px 0;">Sakarya Üniversitesi Mezunlar Platformu</h1>
+   
 </div>
 
 <div style="display:flex; gap:20px; flex-wrap:wrap;">
