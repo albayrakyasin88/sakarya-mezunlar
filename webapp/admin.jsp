@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ include file="includes/db.jsp" %>
 <%@ include file="includes/header.jsp" %>
 <%
@@ -228,4 +228,16 @@ try (Connection conn = getConnection()) {
         <input type="hidden" name="id" value="<%= vId %>">
         <tr>
             <td><%= vId %></td>
-            <td><img src="
+            <td><img src="https://img.youtube.com/vi/<%= rsV.getString("youtube_id") %>/0.jpg" width="70" height="50"></td>
+            <td><input type="text" name="title" value="<%= rsV.getString("title") %>" style="width:180px;"></td>
+            <td><input type="text" name="youtube_id" value="<%= rsV.getString("youtube_id") %>" style="width:200px;"></td>
+            <td>
+                <input type="submit" value="Güncelle">
+                <a href="admin.jsp?action=del_video&id=<%= vId %>" onclick="return confirm('Video silinsin mi?')" style="color:#c0392b; margin-left:5px;">Sil</a>
+            </td>
+        </tr>
+    </form>
+    <% } %>
+</table>
+<% } %>
+</div></body></html>
