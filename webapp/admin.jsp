@@ -33,12 +33,14 @@ try (Connection conn = getConnection()) {
         out.println("<p class='msg-ok'>Kullanıcı silindi.</p>");
     }
 
-    // 2. MESAJ / YORUM DÜZENLEME VE SİLME (Forum, Kişi, Fotoğraf, Video)
+    // 2. MESAJ / YORUM DÜZENLEME VE SİLME
     if ("edit_msg".equals(action)) {
         String tbl = request.getParameter("tbl");
-        if ("forum_messages".equals(tbl) || "profile_comments".equals(tbl) || "photo_comments".equals(tbl) || "video_comments".equals(tbl)) {
-            PreparedStatement ps = conn.prepareStatement("UPDATE " + tbl + " SET content=? WHERE id=?");
-            ps.setString(1, request.getParameter("content"));
+        String col = request.getParameter("col");
+        if (("forum_messages".equals(tbl) || "profile_comments".equals(tbl) || "photo_comments".equals(tbl) || "video_comments".equals(tbl))
+            && ("message".equals(col) || "comment".equals(col) || "comment_text".equals(col) || "content".equals(col))) {
+            PreparedStatement ps = conn.prepareStatement("UPDATE " + tbl + " SET " + col + "=? WHERE id=?");
+            ps.setString(1, request.getParameter("txt"));
             ps.setInt(2, Integer.parseInt(request.getParameter("id")));
             ps.executeUpdate();
             out.println("<p class='msg-ok'>Mesaj içeriği güncellendi.</p>");
@@ -125,36 +127,42 @@ try (Connection conn = getConnection()) {
 
 <h3>2. Tüm Mesaj ve Yorumları Yönet (Düzenle / Sil)</h3>
 <table class="data-table">
-    <tr><th>Alan</th><th>Yazan</th><th>Mesaj İçeriği</th><th>Tarih</th><th>İşlem</th></tr>
+    <tr><th>Alan</th><th>Mesaj / Yorum İçeriği</th><th>Tarih</th><th>İşlem</th></tr>
     <%
-    String unionSql = 
-        "SELECT 'forum_messages' AS tbl, 'Forum' AS area, m.id, u.first_name || ' ' || u.last_name AS author, m.content, m.created_at FROM forum_messages m JOIN users u ON m.user_id=u.id " +
-        "UNION ALL " +
-        "SELECT 'profile_comments' AS tbl, 'Kişi Yorumu' AS area, c.id, u.first_name || ' ' || u.last_name AS author, c.content, c.created_at FROM profile_comments c JOIN users u ON c.author_id=u.id " +
-        "UNION ALL " +
-        "SELECT 'photo_comments' AS tbl, 'Fotoğraf Yorumu' AS area, c.id, u.first_name || ' ' || u.last_name AS author, c.content, c.created_at FROM photo_comments c JOIN users u ON c.user_id=u.id " +
-        "UNION ALL " +
-        "SELECT 'video_comments' AS tbl, 'Video Yorumu' AS area, c.id, u.first_name || ' ' || u.last_name AS author, c.content, c.created_at FROM video_comments c JOIN users u ON c.user_id=u.id " +
-        "ORDER BY created_at DESC";
-    ResultSet rsM = conn.createStatement().executeQuery(unionSql);
-    while (rsM.next()) {
+    String[] tbls = {"forum_messages", "profile_comments", "photo_comments", "video_comments"};
+    String[] labels = {"Forum", "Kişi Yorumu", "Fotoğraf Yorumu", "Video Yorumu"};
+    for (int i = 0; i < tbls.length; i++) {
+        try {
+            ResultSet rsM = conn.createStatement().executeQuery("SELECT * FROM " + tbls[i] + " ORDER BY id DESC");
+            ResultSetMetaData md = rsM.getMetaData();
+            String textCol = "message";
+            for (int c = 1; c <= md.getColumnCount(); c++) {
+                String cn = md.getColumnName(c).toLowerCase();
+                if (cn.equals("message") || cn.equals("comment") || cn.equals("comment_text") || cn.equals("content")) {
+                    textCol = cn;
+                    break;
+                }
+            }
+            while (rsM.next()) {
     %>
     <form method="post" action="admin.jsp">
         <input type="hidden" name="action" value="edit_msg">
-        <input type="hidden" name="tbl" value="<%= rsM.getString("tbl") %>">
+        <input type="hidden" name="tbl" value="<%= tbls[i] %>">
+        <input type="hidden" name="col" value="<%= textCol %>">
         <input type="hidden" name="id" value="<%= rsM.getInt("id") %>">
         <tr>
-            <td><b><%= rsM.getString("area") %></b></td>
-            <td><%= rsM.getString("author") %></td>
-            <td><input type="text" name="content" value="<%= rsM.getString("content") %>" style="width:280px;"></td>
+            <td><b><%= labels[i] %></b></td>
+            <td><input type="text" name="txt" value="<%= rsM.getString(textCol) != null ? rsM.getString(textCol) : "" %>" style="width:320px;"></td>
             <td><%= rsM.getTimestamp("created_at") %></td>
             <td>
                 <input type="submit" value="Güncelle">
-                <a href="admin.jsp?action=del_msg&tbl=<%= rsM.getString("tbl") %>&id=<%= rsM.getInt("id") %>" onclick="return confirm('Mesaj silinsin mi?')" style="color:#c0392b; margin-left:5px;">Sil</a>
+                <a href="admin.jsp?action=del_msg&tbl=<%= tbls[i] %>&id=<%= rsM.getInt("id") %>" onclick="return confirm('Mesaj silinsin mi?')" style="color:#c0392b; margin-left:5px;">Sil</a>
             </td>
         </tr>
     </form>
-    <% } %>
+    <%      }
+        } catch (Exception ignore) {}
+    } %>
 </table>
 
 <hr style="margin:25px 0;">
