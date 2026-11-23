@@ -25,7 +25,7 @@ try (Connection conn = getConnection()) {
 %>
     <h2><%= rsP.getString("title") %></h2>
     <p><i>Fotoğraf üzerindeki kişilere tıklayarak (Image Map) profil sayfalarına gidebilirsiniz:</i></p>
-    <img src="<%= rsP.getString("file_path") %>" onerror="this.src='https://via.placeholder.com/600x400?text=Mezuniyet+Hatirasi'" width="600" height="400" usemap="#personMap" border="1">
+    <img src="<%= rs.getString("file_path") %>" usemap="#photomap" style="max-width: 600px; max-height: 400px; width: auto; height: auto; display: block; border: 1px solid #ccc;">
     <map name="personMap">
         <area shape="rect" coords="40,50,220,280" href="person_detail.jsp?id=1" title="Yasin Admin Profiline Git">
         <area shape="circle" coords="360,160,80" href="person_detail.jsp?id=2" title="Ahmet Yılmaz Profiline Git">
