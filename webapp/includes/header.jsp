@@ -1,4 +1,4 @@
-﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -22,6 +22,7 @@
     <span style="float:right;">
         <% if (session.getAttribute("user_id") != null) { %>
             Hoş geldin, <b><%= session.getAttribute("full_name") %></b> (<%= session.getAttribute("role") %>) |
+            <a href="profile.jsp">Profilimi Düzenle</a> |
             <a href="logout.jsp">Çıkış Yap</a>
         <% } else { %>
             <a href="login.jsp">Oturum Aç</a> | <a href="register.jsp">Kişi Kayıt</a>
