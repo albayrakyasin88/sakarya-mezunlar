@@ -25,13 +25,7 @@ try (Connection conn = getConnection()) {
         session.setAttribute("full_name", request.getParameter("first_name") + " " + request.getParameter("last_name"));
         out.println("<p class='msg-ok'>Profil bilgileriniz güncellendi!</p>");
     }
-String newPass = request.getParameter("new_password");
-if (newPass != null && !newPass.trim().isEmpty()) {
-    PreparedStatement psPass = conn.prepareStatement("UPDATE users SET password=? WHERE id=?");
-    psPass.setString(1, newPass.trim());
-    psPass.setInt(2, userId);
-    psPass.executeUpdate();
-}
+
     PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE id=?");
     ps.setInt(1, userId);
     ResultSet rs = ps.executeQuery();
