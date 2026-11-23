@@ -11,7 +11,7 @@ if (!"ADMIN".equals(session.getAttribute("role"))) {
 try (Connection conn = getConnection()) {
     String action = request.getParameter("action");
 
-    // 1. KULLANICI GÜNCELLEME
+    // 1. KULLANICI GÜNCELLEME / SİLME
     if ("update_user".equals(action)) {
         PreparedStatement ps = conn.prepareStatement(
             "UPDATE users SET first_name=?, last_name=?, city=?, job_info=?, current_school=?, profile_image=?, role=? WHERE id=?");
@@ -26,13 +26,32 @@ try (Connection conn = getConnection()) {
         ps.executeUpdate();
         out.println("<p class='msg-ok'>Kullanıcı bilgileri güncellendi.</p>");
     }
-
-    // 2. KULLANICI SİLME
     if ("del_user".equals(action)) {
         PreparedStatement ps = conn.prepareStatement("DELETE FROM users WHERE id=?");
         ps.setInt(1, Integer.parseInt(request.getParameter("id")));
         ps.executeUpdate();
         out.println("<p class='msg-ok'>Kullanıcı silindi.</p>");
+    }
+
+    // 2. MESAJ / YORUM DÜZENLEME VE SİLME (Forum, Kişi, Fotoğraf, Video)
+    if ("edit_msg".equals(action)) {
+        String tbl = request.getParameter("tbl");
+        if ("forum_messages".equals(tbl) || "profile_comments".equals(tbl) || "photo_comments".equals(tbl) || "video_comments".equals(tbl)) {
+            PreparedStatement ps = conn.prepareStatement("UPDATE " + tbl + " SET content=? WHERE id=?");
+            ps.setString(1, request.getParameter("content"));
+            ps.setInt(2, Integer.parseInt(request.getParameter("id")));
+            ps.executeUpdate();
+            out.println("<p class='msg-ok'>Mesaj içeriği güncellendi.</p>");
+        }
+    }
+    if ("del_msg".equals(action)) {
+        String tbl = request.getParameter("tbl");
+        if ("forum_messages".equals(tbl) || "profile_comments".equals(tbl) || "photo_comments".equals(tbl) || "video_comments".equals(tbl)) {
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM " + tbl + " WHERE id=?");
+            ps.setInt(1, Integer.parseInt(request.getParameter("id")));
+            ps.executeUpdate();
+            out.println("<p class='msg-ok'>Mesaj silindi.</p>");
+        }
     }
 
     // 3. FOTOĞRAF EKLEME / SİLME
@@ -50,7 +69,7 @@ try (Connection conn = getConnection()) {
         out.println("<p class='msg-ok'>Fotoğraf silindi.</p>");
     }
 
-    // 4. VİDEO EKLEME / SİLME (YouTube Linkinden otomatik ID ayıklar)
+    // 4. VİDEO EKLEME / SİLME
     if ("add_video".equals(action)) {
         String rawYt = request.getParameter("youtube_id").trim();
         if (rawYt.contains("v=")) {
@@ -76,38 +95,62 @@ try (Connection conn = getConnection()) {
 
 <h2>Sistem Yönetim Paneli (Admin)</h2>
 
-<!-- BÖLÜM 1: KULLANICI YÖNETİMİ VE DÜZENLEME -->
 <h3>1. Kişi / Üye Yönetimi</h3>
 <table class="data-table">
     <tr><th>ID</th><th>Kullanıcı</th><th>Ad</th><th>Soyad</th><th>Şehir</th><th>Okul / İş</th><th>Profil Foto URL</th><th>Rol</th><th>İşlem</th></tr>
     <%
     ResultSet rsU = conn.createStatement().executeQuery("SELECT * FROM users ORDER BY id");
-    while (rsU.next()) {
-        int uId = rsU.getInt("id");
+    while (rsU.next()) { int uId = rsU.getInt("id");
     %>
     <form method="post" action="admin.jsp">
-        <input type="hidden" name="action" value="update_user">
-        <input type="hidden" name="id" value="<%= uId %>">
+        <input type="hidden" name="action" value="update_user"><input type="hidden" name="id" value="<%= uId %>">
         <tr>
-            <td><%= uId %></td>
-            <td><%= rsU.getString("username") %></td>
-            <td><input type="text" name="first_name" value="<%= rsU.getString("first_name") %>" style="width:90px;"></td>
-            <td><input type="text" name="last_name" value="<%= rsU.getString("last_name") %>" style="width:90px;"></td>
-            <td><input type="text" name="city" value="<%= rsU.getString("city") != null ? rsU.getString("city") : "" %>" style="width:80px;"></td>
+            <td><%= uId %></td><td><%= rsU.getString("username") %></td>
+            <td><input type="text" name="first_name" value="<%= rsU.getString("first_name") %>" style="width:85px;"></td>
+            <td><input type="text" name="last_name" value="<%= rsU.getString("last_name") %>" style="width:85px;"></td>
+            <td><input type="text" name="city" value="<%= rsU.getString("city") != null ? rsU.getString("city") : "" %>" style="width:75px;"></td>
             <td>
-                <input type="text" name="current_school" value="<%= rsU.getString("current_school") != null ? rsU.getString("current_school") : "" %>" placeholder="Okul" style="width:110px;"><br>
-                <input type="text" name="job_info" value="<%= rsU.getString("job_info") != null ? rsU.getString("job_info") : "" %>" placeholder="İş" style="width:110px; margin-top:3px;">
+                <input type="text" name="current_school" value="<%= rsU.getString("current_school") != null ? rsU.getString("current_school") : "" %>" placeholder="Okul" style="width:100px;"><br>
+                <input type="text" name="job_info" value="<%= rsU.getString("job_info") != null ? rsU.getString("job_info") : "" %>" placeholder="İş" style="width:100px; margin-top:2px;">
             </td>
-            <td><input type="text" name="profile_image" value="<%= rsU.getString("profile_image") != null ? rsU.getString("profile_image") : "" %>" style="width:140px;"></td>
+            <td><input type="text" name="profile_image" value="<%= rsU.getString("profile_image") != null ? rsU.getString("profile_image") : "" %>" style="width:130px;"></td>
+            <td><select name="role" style="width:80px;"><option value="USER" <%= "USER".equals(rsU.getString("role")) ? "selected" : "" %>>USER</option><option value="ADMIN" <%= "ADMIN".equals(rsU.getString("role")) ? "selected" : "" %>>ADMIN</option></select></td>
+            <td><input type="submit" value="Kaydet"> <a href="admin.jsp?action=del_user&id=<%= uId %>" onclick="return confirm('Kullanıcı silinsin mi?')" style="color:#c0392b;">Sil</a></td>
+        </tr>
+    </form>
+    <% } %>
+</table>
+
+<hr style="margin:25px 0;">
+
+<h3>2. Tüm Mesaj ve Yorumları Yönet (Düzenle / Sil)</h3>
+<table class="data-table">
+    <tr><th>Alan</th><th>Yazan</th><th>Mesaj İçeriği</th><th>Tarih</th><th>İşlem</th></tr>
+    <%
+    String unionSql = 
+        "SELECT 'forum_messages' AS tbl, 'Forum' AS area, m.id, u.first_name || ' ' || u.last_name AS author, m.content, m.created_at FROM forum_messages m JOIN users u ON m.user_id=u.id " +
+        "UNION ALL " +
+        "SELECT 'profile_comments' AS tbl, 'Kişi Yorumu' AS area, c.id, u.first_name || ' ' || u.last_name AS author, c.content, c.created_at FROM profile_comments c JOIN users u ON c.author_id=u.id " +
+        "UNION ALL " +
+        "SELECT 'photo_comments' AS tbl, 'Fotoğraf Yorumu' AS area, c.id, u.first_name || ' ' || u.last_name AS author, c.content, c.created_at FROM photo_comments c JOIN users u ON c.user_id=u.id " +
+        "UNION ALL " +
+        "SELECT 'video_comments' AS tbl, 'Video Yorumu' AS area, c.id, u.first_name || ' ' || u.last_name AS author, c.content, c.created_at FROM video_comments c JOIN users u ON c.user_id=u.id " +
+        "ORDER BY created_at DESC";
+    ResultSet rsM = conn.createStatement().executeQuery(unionSql);
+    while (rsM.next()) {
+    %>
+    <form method="post" action="admin.jsp">
+        <input type="hidden" name="action" value="edit_msg">
+        <input type="hidden" name="tbl" value="<%= rsM.getString("tbl") %>">
+        <input type="hidden" name="id" value="<%= rsM.getInt("id") %>">
+        <tr>
+            <td><b><%= rsM.getString("area") %></b></td>
+            <td><%= rsM.getString("author") %></td>
+            <td><input type="text" name="content" value="<%= rsM.getString("content") %>" style="width:280px;"></td>
+            <td><%= rsM.getTimestamp("created_at") %></td>
             <td>
-                <select name="role" style="width:85px;">
-                    <option value="USER" <%= "USER".equals(rsU.getString("role")) ? "selected" : "" %>>USER</option>
-                    <option value="ADMIN" <%= "ADMIN".equals(rsU.getString("role")) ? "selected" : "" %>>ADMIN</option>
-                </select>
-            </td>
-            <td>
-                <input type="submit" value="Kaydet">
-                <a href="admin.jsp?action=del_user&id=<%= uId %>" onclick="return confirm('Kullanıcı silinsin mi?')" style="color:#c0392b; margin-left:5px;">Sil</a>
+                <input type="submit" value="Güncelle">
+                <a href="admin.jsp?action=del_msg&tbl=<%= rsM.getString("tbl") %>&id=<%= rsM.getInt("id") %>" onclick="return confirm('Mesaj silinsin mi?')" style="color:#c0392b; margin-left:5px;">Sil</a>
             </td>
         </tr>
     </form>
@@ -116,8 +159,7 @@ try (Connection conn = getConnection()) {
 
 <hr style="margin:25px 0;">
 
-<!-- BÖLÜM 2: FOTOĞRAF YÖNETİMİ -->
-<h3>2. Fotoğraf Galerisi Yönetimi</h3>
+<h3>3. Fotoğraf Galerisi Yönetimi</h3>
 <form method="post" action="admin.jsp" style="margin-bottom:12px;">
     <input type="hidden" name="action" value="add_photo">
     <input type="text" name="title" placeholder="Fotoğraf Başlığı" required>
@@ -126,24 +168,20 @@ try (Connection conn = getConnection()) {
 </form>
 <table class="data-table">
     <tr><th>ID</th><th>Önizleme</th><th>Başlık</th><th>Görsel Yolu / URL</th><th>İşlem</th></tr>
-    <%
-    ResultSet rsP = conn.createStatement().executeQuery("SELECT * FROM photos ORDER BY id DESC");
-    while (rsP.next()) {
-    %>
+    <% ResultSet rsP = conn.createStatement().executeQuery("SELECT * FROM photos ORDER BY id DESC"); while (rsP.next()) { %>
     <tr>
         <td><%= rsP.getInt("id") %></td>
         <td><img src="<%= rsP.getString("file_path") %>" width="70" height="50" style="object-fit:cover;"></td>
         <td><%= rsP.getString("title") %></td>
         <td><%= rsP.getString("file_path") %></td>
-        <td><a href="admin.jsp?action=del_photo&id=<%= rsP.getInt("id") %>" onclick="return confirm('Fotoğraf silinsin mi?')" style="color:#c0392b;">Sil</a></td>
+        <td><a href="admin.jsp?action=del_photo&id=<%= rsP.getInt("id") %>" style="color:#c0392b;">Sil</a></td>
     </tr>
     <% } %>
 </table>
 
 <hr style="margin:25px 0;">
 
-<!-- BÖLÜM 3: VİDEO YÖNETİMİ -->
-<h3>3. Video Galerisi Yönetimi</h3>
+<h3>4. Video Galerisi Yönetimi</h3>
 <form method="post" action="admin.jsp" style="margin-bottom:12px;">
     <input type="hidden" name="action" value="add_video">
     <input type="text" name="title" placeholder="Video Başlığı" required>
@@ -152,19 +190,15 @@ try (Connection conn = getConnection()) {
 </form>
 <table class="data-table">
     <tr><th>ID</th><th>Küçük Resim</th><th>Başlık</th><th>YouTube ID</th><th>İşlem</th></tr>
-    <%
-    ResultSet rsV = conn.createStatement().executeQuery("SELECT * FROM videos ORDER BY id DESC");
-    while (rsV.next()) {
-    %>
+    <% ResultSet rsV = conn.createStatement().executeQuery("SELECT * FROM videos ORDER BY id DESC"); while (rsV.next()) { %>
     <tr>
         <td><%= rsV.getInt("id") %></td>
         <td><img src="https://img.youtube.com/vi/<%= rsV.getString("youtube_id") %>/0.jpg" width="70" height="50"></td>
         <td><%= rsV.getString("title") %></td>
         <td><%= rsV.getString("youtube_id") %></td>
-        <td><a href="admin.jsp?action=del_video&id=<%= rsV.getInt("id") %>" onclick="return confirm('Video silinsin mi?')" style="color:#c0392b;">Sil</a></td>
+        <td><a href="admin.jsp?action=del_video&id=<%= rsV.getInt("id") %>" style="color:#c0392b;">Sil</a></td>
     </tr>
     <% } %>
 </table>
-
 <% } %>
 </div></body></html>
