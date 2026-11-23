@@ -36,17 +36,17 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
         <tr><td>Şifre:</td><td><input type="password" name="password" required></td></tr>
         <tr><td>Ad:</td><td><input type="text" name="first_name" required></td></tr>
         <tr><td>Soyad:</td><td><input type="text" name="last_name" required></td></tr>
-        <tr><td>Cinsiyet (Radio):</td><td>
+        <tr><td>Cinsiyet:</td><td>
             <input type="radio" name="gender" value="Erkek" checked> Erkek
             <input type="radio" name="gender" value="Kadın"> Kadın
         </td></tr>
-        <tr><td>Hobiler (Checkbox):</td><td>
+        <tr><td>Hobiler:</td><td>
             <input type="checkbox" name="hobbies" value="Kodlama"> Kodlama
             <input type="checkbox" name="hobbies" value="Spor"> Spor
             <input type="checkbox" name="hobbies" value="Müzik"> Müzik
             <input type="checkbox" name="hobbies" value="Seyahat"> Seyahat
         </td></tr>
-        <tr><td>Oturduğu Şehir (Combobox):</td><td>
+        <tr><td>Yaşadığı Şehir:</td><td>
             <select name="city">
                 <option value="Sakarya">Sakarya</option>
                 <option value="Kocaeli">Kocaeli</option>
@@ -55,10 +55,10 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                 <option value="İzmir">İzmir</option>
             </select>
         </td></tr>
-        <tr><td>Adres (Textarea):</td><td><textarea name="address" rows="3"></textarea></td></tr>
+        <tr><td>Adres:</td><td><textarea name="address" rows="3"></textarea></td></tr>
         <tr><td>Telefon:</td><td><input type="text" name="phone"></td></tr>
         <tr><td>Şimdiki Okulu:</td><td><input type="text" name="current_school"></td></tr>
-        <tr><td>İşi / Mesleği:</td><td><input type="text" name="job_info"></td></tr>
+        <tr><td>Mesleği:</td><td><input type="text" name="job_info"></td></tr>
         <tr><td>E-Posta:</td><td><input type="email" name="email"></td></tr>
         <tr><td>Web Adresi:</td><td><input type="url" name="website" placeholder="https://..."></td></tr>
         <tr><td>Sosyal Medya (FB/Twitter):</td><td><input type="text" name="social_media"></td></tr>
