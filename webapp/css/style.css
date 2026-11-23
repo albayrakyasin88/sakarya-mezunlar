@@ -19,3 +19,9 @@ input[type=submit]:hover, button:hover { background: #1a252f; }
 .card img { width: 160px; height: 130px; object-fit: cover; border: 1px solid #ddd; }
 .msg-ok { color: #1e8449; font-weight: bold; }
 .msg-err { color: #c0392b; font-weight: bold; }
+.card img, .gallery-item img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+}
