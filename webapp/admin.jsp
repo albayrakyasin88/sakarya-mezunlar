@@ -1,4 +1,4 @@
-﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ include file="includes/db.jsp" %>
 <%@ include file="includes/header.jsp" %>
 <%
@@ -11,7 +11,24 @@ if (!"ADMIN".equals(session.getAttribute("role"))) {
 try (Connection conn = getConnection()) {
     String action = request.getParameter("action");
 
-    // 1. KULLANICI GÜNCELLEME / SİLME
+    // 1. KULLANICI EKLEME / GÜNCELLEME / SİLME
+    if ("add_user".equals(action)) {
+        String img = request.getParameter("profile_image");
+        if (img == null || img.trim().isEmpty()) img = "https://picsum.photos/id/64/300/300";
+        PreparedStatement ps = conn.prepareStatement(
+            "INSERT INTO users (username, password, first_name, last_name, city, current_school, job_info, profile_image, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        ps.setString(1, request.getParameter("username"));
+        ps.setString(2, request.getParameter("password"));
+        ps.setString(3, request.getParameter("first_name"));
+        ps.setString(4, request.getParameter("last_name"));
+        ps.setString(5, request.getParameter("city"));
+        ps.setString(6, request.getParameter("current_school"));
+        ps.setString(7, request.getParameter("job_info"));
+        ps.setString(8, img);
+        ps.setString(9, request.getParameter("role"));
+        ps.executeUpdate();
+        out.println("<p class='msg-ok'>Yeni üye başarıyla eklendi.</p>");
+    }
     if ("update_user".equals(action)) {
         PreparedStatement ps = conn.prepareStatement(
             "UPDATE users SET first_name=?, last_name=?, city=?, job_info=?, current_school=?, profile_image=?, role=? WHERE id=?");
@@ -33,7 +50,22 @@ try (Connection conn = getConnection()) {
         out.println("<p class='msg-ok'>Kullanıcı silindi.</p>");
     }
 
-    // 2. MESAJ / YORUM DÜZENLEME VE SİLME
+    // 2. MESAJ / YORUM EKLEME / DÜZENLEME / SİLME
+    if ("add_msg".equals(action)) {
+        int adminId = session.getAttribute("user_id") != null ? (Integer) session.getAttribute("user_id") : 1;
+        ResultSet rsCol = conn.createStatement().executeQuery("SELECT * FROM forum_messages LIMIT 1");
+        ResultSetMetaData md = rsCol.getMetaData();
+        String msgCol = "message";
+        for (int c = 1; c <= md.getColumnCount(); c++) {
+            String cn = md.getColumnName(c).toLowerCase();
+            if (cn.equals("message") || cn.equals("content")) { msgCol = cn; break; }
+        }
+        PreparedStatement ps = conn.prepareStatement("INSERT INTO forum_messages (user_id, " + msgCol + ") VALUES (?, ?)");
+        ps.setInt(1, adminId);
+        ps.setString(2, request.getParameter("txt"));
+        ps.executeUpdate();
+        out.println("<p class='msg-ok'>Yeni forum mesajı eklendi.</p>");
+    }
     if ("edit_msg".equals(action)) {
         String tbl = request.getParameter("tbl");
         String col = request.getParameter("col");
@@ -115,6 +147,19 @@ try (Connection conn = getConnection()) {
 <h2>Sistem Yönetim Paneli (Admin)</h2>
 
 <h3>1. Kişi / Üye Yönetimi</h3>
+<form method="post" action="admin.jsp" style="margin-bottom:12px;">
+    <input type="hidden" name="action" value="add_user">
+    <input type="text" name="username" placeholder="Kullanıcı Adı" style="width:100px;" required>
+    <input type="text" name="password" placeholder="Şifre" style="width:80px;" required>
+    <input type="text" name="first_name" placeholder="Ad" style="width:85px;" required>
+    <input type="text" name="last_name" placeholder="Soyad" style="width:85px;" required>
+    <input type="text" name="city" placeholder="Şehir" style="width:80px;">
+    <input type="text" name="current_school" placeholder="Okul" style="width:95px;">
+    <input type="text" name="job_info" placeholder="İş" style="width:95px;">
+    <input type="text" name="profile_image" placeholder="Foto URL" style="width:110px;">
+    <select name="role"><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select>
+    <input type="submit" value="Üye Ekle">
+</form>
 <table class="data-table">
     <tr><th>ID</th><th>Kullanıcı</th><th>Ad</th><th>Soyad</th><th>Şehir</th><th>Okul / İş</th><th>Profil Foto URL</th><th>Rol</th><th>İşlem</th></tr>
     <%
@@ -142,7 +187,12 @@ try (Connection conn = getConnection()) {
 
 <hr style="margin:25px 0;">
 
-<h3>2. Tüm Mesaj ve Yorumları Yönet (Düzenle / Sil)</h3>
+<h3>2. Tüm Mesaj ve Yorumları Yönet (Ekle / Düzenle / Sil)</h3>
+<form method="post" action="admin.jsp" style="margin-bottom:12px;">
+    <input type="hidden" name="action" value="add_msg">
+    <input type="text" name="txt" placeholder="Foruma yeni duyuru / mesaj yazın..." style="width:360px;" required>
+    <input type="submit" value="Mesaj Ekle">
+</form>
 <table class="data-table">
     <tr><th>Alan</th><th>Mesaj / Yorum İçeriği</th><th>Tarih</th><th>İşlem</th></tr>
     <%
@@ -199,7 +249,7 @@ try (Connection conn = getConnection()) {
         <input type="hidden" name="id" value="<%= pId %>">
         <tr>
             <td><%= pId %></td>
-            <td><img src="<%= rsP.getString("file_path") %>" width="70" height="50" style="object-fit:cover;"></td>
+            <td><img src="<%= rsP.getString("file_path") %>" width="70" height="50" style="object-fit:contain; background:#f8f9fa;"></td>
             <td><input type="text" name="title" value="<%= rsP.getString("title") %>" style="width:180px;"></td>
             <td><input type="text" name="file_path" value="<%= rsP.getString("file_path") %>" style="width:260px;"></td>
             <td>
